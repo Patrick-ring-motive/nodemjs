@@ -72,11 +72,7 @@ Allow: /`);
 
     if (pat == '/sw.js') {
       
-      return res.endAvail(`html{
-
-transform:scaleX(-1);
-  
-}`);
+       return fileFromRequest(req, res);
 
     }
 
@@ -87,8 +83,12 @@ transform:scaleX(-1);
     }
 
     if (pat == '/reverse.css') {
-      
-      return fileFromRequest(req, res);
+        return res.endAvail(`html{
+
+transform:scaleX(-1);
+  
+}`);
+
 
     }
 
