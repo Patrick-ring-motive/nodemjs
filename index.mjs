@@ -1,129 +1,192 @@
 import fetch from 'node-fetch';
 import http from 'http';
+import fileFromRequest from './static-files.mjs';
+import addCorsHeaders from './cors-headers.mjs';
+import rcache from './repl-cache.mjs';
+import sleep from './sleep.mjs';
+import maintain from './auto-maintain.mjs';
+import {availReq,availRes} from './availability.mjs';
+
+let hostTarget = 'www.google.com';
+let hostList = [];
+hostList.push('www.google.com');
 
 
-const hostTarget = 'patrick-ring-motive.github.io';
 
-http.createServer(onRequest).listen(3000);
+
+let server = http.createServer(onRequest);
+
+server.listen(3000);
+maintain(server);
 
 async function onRequest(req, res) {
-  let path = req.url.replaceAll('*', '');
-  let pat = path.split('?')[0].split('#')[0];
+  try {
 
-
-
-  /*respond to ping from uptime robot*/
-  if (path == '/ping') {
-    res.statusCode = 200;
-    return res.end();
-  }
-
-  req.headers.host = hostTarget;
-  req.headers.referer = hostTarget;
-
-
-
-  /* start reading the body of the request*/
-  let bdy = "";
-  req.on('readable', function() {
-    bdy += req.read();
-  });
-  req.on('end', async function() {
-    /* finish reading the body of the request*/
-
-    /* start copying over the other parts of the request */
-    let options = {
-      method: req.method,
-      headers: req.headers
-    };
-    /* fetch throws an error if you send a body with a GET request even if it is empty */
-    if ((req.method != 'GET') && (req.method != 'HEAD') && (bdy.length > 0)) {
-      options = {
-        method: req.method,
-        headers: req.headers,
-        body: bdy
-      };
-    }
-    /* finish copying over the other parts of the request */
-
-    /* fetch from your desired target */
-    let response = await fetch('https://' + hostTarget + path, options);
-
-    /* copy over response headers 
-
+    res=availRes(res);
     
-    */
+    
+  //  console.log(Object.keys(responseBuffer).length);
+    const hostProxy = req.headers['host'];
+    
 
 
-    res.headers = response.headers;
+    if (req.url == '/ping') {
+      res.statusCode = 200;
+      
+      return res.endAvail();
+    }
+    let path = req.url.replaceAll('*', '');
+    let pat = path.split('?')[0].split('#')[0]
 
-    /* check to see if the response is not a text format */
-    let ct = response.headers.get('content-type');
+    if (pat == '/robots.txt') {
+      res.statusCode = 200;
+      
+      return res.endAvail(
+        `User-agent: *
+Allow: /`);
 
-    if ((ct) && (ct.indexOf('image') == -1) && (ct.indexOf('video') == -1) && (ct.indexOf('audio') == -1)) {
+    }
 
-      const path_list = pat.split('.');
-      const path_end = path_list[path_list.length - 1];
+    req.key = req.url;
+    if (req.key.length > 200) {
+      req.key = req.key.slice(0, 199);
+    }
+    req.key = encodeURIComponent(req.key);
 
-      switch (path_end) {
-        case 'js':
-          res.removeHeader('content-type');
-          res.setHeader('content-type', 'text/javascript');
-          break;
-        case 'css':
-          res.removeHeader('content-type');
-          res.setHeader('content-type', 'text/css');
-          break;
-        case 'html':
-          res.removeHeader('content-type');
-          res.setHeader('content-type', 'text/html');
-          break;
-        case 'xhtml':
-          res.removeHeader('content-type');
-          res.setHeader('content-type', 'application/xhtml+xml');
-          break;
-        case 'xml':
-          res.removeHeader('content-type');
-          res.setHeader('content-type', 'application/xml');
-          break; application / json
-        case 'json':
-          res.removeHeader('content-type');
-          res.setHeader('content-type', 'application/json');
-          break; application / json
-        case 'jsonp':
-          res.removeHeader('content-type');
-          res.setHeader('content-type', 'application/javascript');
-          break;
-        case 'pdf':
-          res.removeHeader('content-type');
-          res.setHeader('content-type', 'application/pdf');
-          break;
-        case 'mht':
-          res.removeHeader('content-type');
-          res.setHeader('content-type', 'multipart/related');
-          break;
-        case 'mhtml':
-          res.removeHeader('content-type');
-          res.setHeader('content-type', 'multipart/related');
-          break;
-        default:
-          break;
+    if ((req.method.toUpperCase() == 'GET') && (rcache.get(req.key))) {
+      res = rcache.apply(req.key, res);
+      
+      return res.endAvail(res.rbody);
+
+    }
+
+    res = addCorsHeaders(res);
+
+    ;
+
+    if (pat == '/link-resolver.js') {
+      
+      return fileFromRequest(req, res);
+
+    }
+
+    if (pat == '/sw.js') {
+      
+      return fileFromRequest(req, res);
+
+    }
+
+    if (pat == '/favicon.ico') {
+      
+      return fileFromRequest(req, res);
+
+    }
+
+    if (pat == '/reverse.css') {
+      
+      return fileFromRequest(req, res);
+
+    }
+
+    req.headers.host = hostTarget;
+    req.headers.referer = hostTarget;
+
+
+    /* start reading the body of the request*/
+    let bdy = "";
+    req.on('readable', function() {
+      bdy += req.read()||'';
+    });
+    req.on('end', async function() {
+      /* finish reading the body of the request*/
+
+      /* start copying over the other parts of the request */
+      let options = {
+        method: req.method,
+        headers: req.headers
+      };
+      /* fetch throws an error if you send a body with a GET request even if it is empty */
+      if ((req.method != 'GET') && (req.method != 'HEAD') && (bdy.length > 0)) {
+        options = {
+          method: req.method,
+          headers: req.headers,
+          body: bdy
+        };
+      }
+      /* finish copying over the other parts of the request */
+
+      /* fetch from your desired target */
+      let response = await fetch('https://' + hostTarget + path, options);
+
+      /* if there is a problem try redirecting to the original */
+      if (response.status > 399) {
+        res.setHeader('location', 'https://' + hostTarget + path);
+        res.statusCode = 302;
+        
+        return res.endAvail();
       }
 
-      /* Copy over target response and return */
-      let resBody = await response.text();
-      res.end(resBody);
+
+      /* copy over response headers  */
+
+      for (let [key, value] of response.headers.entries()) {
+        res.setHeader(key, value);
+      }
+      for (let [key, value] of response.headers.keys()) {
+        if (key.length > 1) {
+          res.removeHeader(key);
+          res.setHeader(key, value);
+        }
+      }
+
+      res.removeHeader('content-encoding');
+      res.removeHeader('content-length');
+
+      res = addCorsHeaders(res);
+
+      /* check to see if the response is not a text format */
+      let ct = response.headers.get('content-type');
 
 
-    } else {
 
-      /* if not a text response then redirect straight to target */
-      res.setHeader('location', 'https://' + hostTarget + path);
-      res.statusCode = 301;
-      res.end();
+      res.setHeader('content-type', ct);
 
-    }
-  });
+      if ((ct) && (!ct.includes('image')) && (!ct.includes('video')) && (!ct.includes('audio'))) {
 
 
+        /* Copy over target response and return */
+        let resBody = await response.text();
+
+        let resNewBody = resBody.replace('<head>',
+          `<head modified>
+          <script src="/sw.js"></script>
+          <script src="https://`+ hostProxy + `/link-resolver.js" host-list="` + btoa(JSON.stringify(hostList)) + `"></script>
+<link rel="stylesheet" href="/reverse.css" />`);
+        if ((req.method.toUpperCase() == 'GET') && (ct.includes('javascript') || ct.includes('css'))) {
+          rcache.add(req.key, res, resNewBody);
+        }
+        
+        return res.endAvail(resNewBody);
+
+
+      } else {
+
+        /* if not a text response then redirect straight to target */
+        res.setHeader('location', 'https://' + hostTarget + path);
+        res.statusCode = 301;
+        
+        return res.endAvail();
+
+      }
+    });
+  setTimeout(X=>{try{res.endAvail();delete responseBuffer[res.resId];}catch(e){}},5000);
+  } catch (e) {
+    console.log(e);
+    let stack = e.stack || "";
+    res.statusCode = 500;
+    
+    return res.endAvail('500 ' + e.message + '\n' + stack);
+
+  }
 }
+
