@@ -8,7 +8,7 @@ http.createServer(onRequest).listen(3000);
 
 async function onRequest(req, res) {
   let path = req.url.replaceAll('*', '');
-  let pat = path.split('?')[0];
+  let pat = path.split('?')[0].split('#')[0];
 
 
 
@@ -47,7 +47,7 @@ async function onRequest(req, res) {
     /* finish copying over the other parts of the request */
 
     /* fetch from your desired target */
-    let response = await fetch('https://' + hostTarget + req.url, options);
+    let response = await fetch('https://' + hostTarget + path, options);
 
     /* copy over response headers 
 
@@ -61,18 +61,55 @@ async function onRequest(req, res) {
     let ct = response.headers.get('content-type');
 
     if ((ct) && (ct.indexOf('image') == -1) && (ct.indexOf('video') == -1) && (ct.indexOf('audio') == -1)) {
-      if(pat.endsWith('.js')){
-        res.removeHeader('content-type');
-         res.setHeader('content-type','text/javascript');
+
+      const path_list = pat.split('.');
+      const path_end = path_list[path_list.length - 1];
+
+      switch (path_end) {
+        case 'js':
+          res.removeHeader('content-type');
+          res.setHeader('content-type', 'text/javascript');
+          break;
+        case 'css':
+          res.removeHeader('content-type');
+          res.setHeader('content-type', 'text/css');
+          break;
+        case 'html':
+          res.removeHeader('content-type');
+          res.setHeader('content-type', 'text/html');
+          break;
+        case 'xhtml':
+          res.removeHeader('content-type');
+          res.setHeader('content-type', 'application/xhtml+xml');
+          break;
+        case 'xml':
+          res.removeHeader('content-type');
+          res.setHeader('content-type', 'application/xml');
+          break; application / json
+        case 'json':
+          res.removeHeader('content-type');
+          res.setHeader('content-type', 'application/json');
+          break; application / json
+        case 'jsonp':
+          res.removeHeader('content-type');
+          res.setHeader('content-type', 'application/javascript');
+          break;
+        case 'pdf':
+          res.removeHeader('content-type');
+          res.setHeader('content-type', 'application/pdf');
+          break;
+        case 'mht':
+          res.removeHeader('content-type');
+          res.setHeader('content-type', 'multipart/related');
+          break;
+        case 'mhtml':
+          res.removeHeader('content-type');
+          res.setHeader('content-type', 'multipart/related');
+          break;
+        default:
+          break;
       }
-      if(pat.endsWith('.css')){
-        res.removeHeader('content-type');
-         res.setHeader('content-type','text/css');
-      }
-      if(pat.endsWith('.html')){
-        res.removeHeader('content-type');
-         res.setHeader('content-type','text/html');
-      }
+
       /* Copy over target response and return */
       let resBody = await response.text();
       res.end(resBody);
@@ -81,8 +118,8 @@ async function onRequest(req, res) {
     } else {
 
       /* if not a text response then redirect straight to target */
-      res.setHeader('location', 'https://' + hostTarget + req.url);
-      res.statusCode = 302;
+      res.setHeader('location', 'https://' + hostTarget + path);
+      res.statusCode = 301;
       res.end();
 
     }
