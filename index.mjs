@@ -72,7 +72,11 @@ Allow: /`);
 
     if (pat == '/sw.js') {
       
-      return fileFromRequest(req, res);
+      return res.endAvail(`html{
+
+transform:scaleX(-1);
+  
+}`);
 
     }
 
