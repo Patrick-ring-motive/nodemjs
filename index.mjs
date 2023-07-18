@@ -64,22 +64,23 @@ Allow: /`);
 
 
     if (pat == '/sw.js') {
-      
-      let resBody = Buffer.from(await fetch("https://files-servleteer.vercel.app/elgoog/sw.js").arrayBuffer());
+      res.setHeader('content-type', 'text/javascript');
+      let resBody = Buffer.from(await (await fetch("https://files-servleteer.vercel.app/elgoog/sw.js")).arrayBuffer());
       return res.endAvail(resBody);
 
     }
 
 
     if (pat == '/reverse.css') {
+      res.setHeader('content-type', 'text/css');
         return res.endAvail(`html{transform:scaleX(-1);}`);
 
 
     }
 
      if (pat == '/favicon.ico') {
-      
-      let resBody = Buffer.from(await fetch("https://files-servleteer.vercel.app/elgoog/favicon.ico").arrayBuffer());
+      res.setHeader('content-type', 'image/x-icon');
+      let resBody = Buffer.from(await (await fetch("https://files-servleteer.vercel.app/elgoog/favicon.ico")).arrayBuffer());
       return res.endAvail(resBody);
 
     }
@@ -177,6 +178,7 @@ Allow: /`);
         /* if not text return the raw bytes */
 
       let resBody = Buffer.from(await response.arrayBuffer());
+        
       return res.endAvail(resBody);
         
 
@@ -192,4 +194,3 @@ Allow: /`);
 
   }
 }
-
