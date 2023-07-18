@@ -64,33 +64,28 @@ Allow: /`);
 
     ;
 
-    if (pat == '/link-resolver.js') {
-      
-      return fileFromRequest(req, res);
-
-    }
 
     if (pat == '/sw.js') {
       
-       return fileFromRequest(req, res);
+      let resBody = Buffer.from(await fetch("https://files-servleteer.vercel.app/elgoog/sw.js").arrayBuffer());
+      return res.endAvail(resBody);
 
     }
 
-    if (pat == '/favicon.ico') {
-      
-      return fileFromRequest(req, res);
-
-    }
 
     if (pat == '/reverse.css') {
-        return res.endAvail(`html{
-
-transform:scaleX(-1);
-  
-}`);
+        return res.endAvail(`html{transform:scaleX(-1);}`);
 
 
     }
+
+     if (pat == '/favicon.ico') {
+      
+      let resBody = Buffer.from(await fetch("https://files-servleteer.vercel.app/elgoog/favicon.ico").arrayBuffer());
+      return res.endAvail(resBody);
+
+    }
+
 
     req.headers.host = hostTarget;
     req.headers.referer = hostTarget;
@@ -164,7 +159,7 @@ transform:scaleX(-1);
         let resNewBody = resBody.replace('<head>',
           `<head modified>
           <script src="/sw.js"></script>
-          <script src="https://`+ hostProxy + `/link-resolver.js" host-list="` + btoa(JSON.stringify(hostList)) + `"></script>
+          <script src="https://files-servleteer.vercel.app/elgoog/link-resolver.js" host-list="` + btoa(JSON.stringify(hostList)) + `"></script>
 <link rel="stylesheet" href="/reverse.css" />`);
         if ((req.method.toUpperCase() == 'GET') && (ct.includes('javascript') || ct.includes('css'))) {
           rcache.add(req.key, res, resNewBody);
@@ -175,11 +170,17 @@ transform:scaleX(-1);
 
       } else {
 
+
         /* if not a text response then redirect straight to target */
-        res.setHeader('location', 'https://' + hostTarget + path);
+        /*res.setHeader('location', 'https://' + hostTarget + path);
         res.statusCode = 301;
+        return res.endAvail();*/
+
+        /* if not text return the raw bytes */
+
+      let resBody = Buffer.from(await response.arrayBuffer());
+      return res.endAvail(resBody);
         
-        return res.endAvail();
 
       }
     });
