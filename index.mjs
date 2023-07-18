@@ -62,8 +62,6 @@ Allow: /`);
 
     res = addCorsHeaders(res);
 
-    ;
-
 
     if (pat == '/sw.js') {
       
