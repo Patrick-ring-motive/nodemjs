@@ -164,7 +164,7 @@ Allow: /`);
         if ((req.method.toUpperCase() == 'GET') && (ct.includes('javascript') || ct.includes('css'))) {
           rcache.add(req.key, res, resNewBody);
         }
-        res.setHeader('content-length',new Blob([resNewBody]).size);
+       // res.setHeader('content-length',new Blob([resNewBody]).size);
         return res.endAvail(resNewBody);
 
 
@@ -179,7 +179,7 @@ Allow: /`);
         /* if not text return the raw bytes */
 
       let resBody = Buffer.from(await response.arrayBuffer());
-      res.setHeader('content-length',resBody.length);  
+    //  res.setHeader('content-length',resBody.length);  
       return res.endAvail(resBody);
         
 
