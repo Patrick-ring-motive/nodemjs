@@ -120,7 +120,6 @@ Allow: /`);
       if (response.status > 399) {
         res.setHeader('location', 'https://' + hostTarget + path);
         res.statusCode = 302;
-        
         return res.endAvail();
       }
 
@@ -143,13 +142,13 @@ Allow: /`);
       res = addCorsHeaders(res);
 
       /* check to see if the response is not a text format */
-      let ct = response.headers.get('content-type');
+      let ct = `${response.headers.get('content-type')}`.toLowerCase();
 
 
 
       res.setHeader('content-type', ct);
 
-      if ((ct) && (!ct.includes('image')) && (!ct.includes('video')) && (!ct.includes('audio'))) {
+      if ((!ct.includes('image')) && (!ct.includes('video')) && (!ct.includes('audio'))) {
 
 
         /* Copy over target response and return */
