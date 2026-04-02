@@ -5,14 +5,14 @@ import addCorsHeaders from './cors-headers.mjs';
 import rcache from './repl-cache.mjs';
 import sleep from './sleep.mjs';
 import maintain from './auto-maintain.mjs';
-import {availReq,availRes} from './availability.mjs';
+import {
+  availReq,
+  availRes
+} from './availability.mjs';
 
 let hostTarget = 'www.google.com';
 let hostList = [];
 hostList.push('www.google.com');
-
-
-
 
 let server = http.createServer(onRequest);
 
@@ -22,17 +22,14 @@ maintain(server);
 async function onRequest(req, res) {
   try {
 
-    res=availRes(res);
-    
-    
-  //  console.log(Object.keys(responseBuffer).length);
-    const hostProxy = req.headers['host'];
-    
+    res = availRes(res);
 
+    //  console.log(Object.keys(responseBuffer).length);
+    const hostProxy = req.headers['host'];
 
     if (req.url == '/ping') {
       res.statusCode = 200;
-      
+
       return res.endAvail();
     }
     let path = req.url.replaceAll('*', '');
@@ -40,7 +37,7 @@ async function onRequest(req, res) {
 
     if (pat == '/robots.txt') {
       res.statusCode = 200;
-      
+
       return res.endAvail(
         `User-agent: *
 Allow: /`);
@@ -55,13 +52,12 @@ Allow: /`);
 
     if ((req.method.toUpperCase() == 'GET') && (rcache.get(req.key))) {
       res = rcache.apply(req.key, res);
-      
+
       return res.endAvail(res.rbody);
 
     }
 
     res = addCorsHeaders(res);
-
 
     if (pat == '/sw.js') {
       res.setHeader('content-type', 'text/javascript');
@@ -70,30 +66,26 @@ Allow: /`);
 
     }
 
-
     if (pat == '/reverse.css') {
       res.setHeader('content-type', 'text/css');
-        return res.endAvail(`html{transform:scaleX(-1);}`);
-
+      return res.endAvail(`html{transform:scaleX(-1);}`);
 
     }
 
-     if (pat == '/favicon.ico') {
+    if (pat == '/favicon.ico') {
       res.setHeader('content-type', 'image/x-icon');
       let resBody = Buffer.from(await (await fetch("https://files-servleteer.vercel.app/elgoog/favicon.ico")).arrayBuffer());
       return res.endAvail(resBody);
 
     }
 
-
     req.headers.host = hostTarget;
     req.headers.referer = hostTarget;
-
 
     /* start reading the body of the request*/
     let bdy = "";
     req.on('readable', function() {
-      bdy += req.read()||'';
+      bdy += req.read() || '';
     });
     req.on('end', async function() {
       /* finish reading the body of the request*/
@@ -123,7 +115,6 @@ Allow: /`);
         return res.endAvail();
       }
 
-
       /* copy over response headers  */
 
       for (let [key, value] of response.headers.entries()) {
@@ -144,12 +135,9 @@ Allow: /`);
       /* check to see if the response is not a text format */
       let ct = `${response.headers.get('content-type')}`.toLowerCase();
 
-
-
       res.setHeader('content-type', ct);
 
       if ((!ct.includes('image')) && (!ct.includes('video')) && (!ct.includes('audio'))) {
-
 
         /* Copy over target response and return */
         let resBody = await response.text();
@@ -163,12 +151,10 @@ Allow: /`);
         if ((req.method.toUpperCase() == 'GET') && (ct.includes('javascript') || ct.includes('css'))) {
           rcache.add(req.key, res, resNewBody);
         }
-       // res.setHeader('content-length',new Blob([resNewBody]).size);
+        // res.setHeader('content-length',new Blob([resNewBody]).size);
         return res.endAvail(resNewBody);
 
-
       } else {
-
 
         /* if not a text response then redirect straight to target */
         /*res.setHeader('location', 'https://' + hostTarget + path);
@@ -177,19 +163,23 @@ Allow: /`);
 
         /* if not text return the raw bytes */
 
-      let resBody = Buffer.from(await response.arrayBuffer());
-    //  res.setHeader('content-length',resBody.length);  
-      return res.endAvail(resBody);
-        
+        let resBody = Buffer.from(await response.arrayBuffer());
+        //  res.setHeader('content-length',resBody.length);  
+        return res.endAvail(resBody);
 
       }
     });
-  setTimeout(X=>{try{res.endAvail();delete responseBuffer[res.resId];}catch(e){}},5000);
+    setTimeout(X => {
+      try {
+        res.endAvail();
+        delete responseBuffer[res.resId];
+      } catch (e) {}
+    }, 5000);
   } catch (e) {
     console.log(e);
     let stack = e.stack || "";
     res.statusCode = 500;
-    
+
     return res.endAvail('500 ' + e.message + '\n' + stack);
 
   }
