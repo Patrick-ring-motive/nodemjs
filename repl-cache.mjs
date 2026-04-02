@@ -2,17 +2,20 @@ const HOUR = 3600000;
 const DAY = HOUR * 24;
 const MINUTES5 = HOUR / 12;
 
-
 globalThis.rcache = Object.create(null);
 
 buildCache();
-
 
 function buildCache() {
 
   globalThis.rcache.add = function(url, res, bdy) {
 
-    globalThis.rcache[url] = { status: res.statusCode, headers: res.getHeaders(), body: bdy, timestamp: new Date().getTime() };
+    globalThis.rcache[url] = {
+      status: res.statusCode,
+      headers: res.getHeaders(),
+      body: bdy,
+      timestamp: new Date().getTime()
+    };
     return true;
   }
 
@@ -58,7 +61,9 @@ globalThis.rcache.clean = setInterval(async function() {
         globalThis.rcache(cache_list[i][0]);
       }
 
-    } catch (e) { continue; }
+    } catch (e) {
+      continue;
+    }
   }
 
 }, MINUTES5);
