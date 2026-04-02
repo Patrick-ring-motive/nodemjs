@@ -1,26 +1,28 @@
 import path from 'path';
 import fs from 'fs';
 import mime from 'mime-types';
-import { fileURLToPath } from 'url';
-import { dirname } from 'path';
+import {
+  fileURLToPath
+} from 'url';
+import {
+  dirname
+} from 'path';
 import rcache from './repl-cache.mjs';
-import {availRes} from './availability.mjs';
+import {
+  availRes
+} from './availability.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-
-
-
 export default function fileFromRequest(req, res) {
-  res=availRes(res);
+  res = availRes(res);
   let URI = req.url.replaceAll('*', '');
   let shortURI = URI.split('?')[0].split('#')[0];
 
   if (shortURI[shortURI.length - 1] == '/') {
     shortURI = shortURI + 'index.html';
   }
-
 
   try {
     let fileLocation = path.join(__dirname, shortURI);
@@ -42,7 +44,4 @@ export default function fileFromRequest(req, res) {
     return res.endAvail('File not found ' + e.message);
   }
 
-
 }
-
-
