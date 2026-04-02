@@ -1,4 +1,3 @@
-
 export default function addCorsHeaders(res) {
   res.removeHeader('Access-Control-Allow-Origin');
   res.setHeader('Access-Control-Allow-Origin', '*');
